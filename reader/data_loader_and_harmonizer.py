@@ -191,7 +191,7 @@ def harmonize_datasets(
     mclimate,
     varname,
     model,
-    ensemble_mean=True,
+    ensemble_mean,
     domain=None,
 ):
     """
@@ -230,8 +230,10 @@ def harmonize_datasets(
     # -------------------------------------------------
     # 4. Rename vars
     # -------------------------------------------------
-    mclimate = mclimate.rename({f"{varname}_percentiles": varname})
-
+    if model == "gefs":
+        mclimate = mclimate.rename({f"{varname}_percentiles": varname})
+    elif model == "wwrf":
+        mclimate = mclimate.rename({f"{varname}_percentile": varname})
 
     # -------------------------------------------------
     # 5. Convert lead times to integer hours
@@ -261,22 +263,22 @@ def harmonize_datasets(
     # -------------------------------------------------
     # 8. Standard dimension ordering
     # -------------------------------------------------
-
-    preferred_order = [
-        "number",
-        "ensemble",
-        "init_date",
-        "lead_time",
-        "latitude",
-        "longitude",
-    ]
-    
-    dim_order = [
-        d for d in preferred_order
-        if d in forecast.dims
-    ]
-    
-    forecast = forecast.transpose(*dim_order)
+    if model == "gefs":
+        preferred_order = [
+            "number",
+            "ensemble",
+            "init_date",
+            "lead_time",
+            "latitude",
+            "longitude",
+        ]
+        
+        dim_order = [
+            d for d in preferred_order
+            if d in forecast.dims
+        ]
+        
+        forecast = forecast.transpose(*dim_order)
 
     # -------------------------------------------------
     # 9. Remove time-encoding attributes 
@@ -292,12 +294,16 @@ def harmonize_datasets(
     forecast = convert_leadtime_to_integer_hours(forecast)
     mclimate = convert_leadtime_to_integer_hours(mclimate)
 
+    print(forecast)
+    print(mclimate)
+
     return forecast, mclimate
 
 def prepare_forecast_and_mclimate(
     init_date,
     varname,
     domain,
+    ensemble_mean,
     model="gefs",
     source="reforecast",
 ):
@@ -349,6 +355,7 @@ def prepare_forecast_and_mclimate(
         mclimate=mclimate,
         varname=varname,
         model=model,
+        ensemble_mean=ensemble_mean,
         domain=domain,
     )
 

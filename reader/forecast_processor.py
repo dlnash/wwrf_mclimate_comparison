@@ -14,6 +14,7 @@ def process_variable(
     init_date,
     varname,
     domain,
+    ensemble_mean,
     model="gefs",
     source="reforecast",
 ):
@@ -25,6 +26,7 @@ def process_variable(
         init_date=init_date,
         varname=varname,
         domain=domain,
+        ensemble_mean=ensemble_mean,
         model=model,
         source=source,
     )
@@ -41,6 +43,7 @@ def process_all_variables(
     init_date,
     var_lst,
     domain,
+    ensemble_mean,
     model="gefs",
     source="reforecast",
     server="aware",
@@ -64,6 +67,7 @@ def process_all_variables(
             init_date=init_date,
             varname=varname,
             domain=domain,
+            ensemble_mean=ensemble_mean,
             model=model,
             source=source,
         )

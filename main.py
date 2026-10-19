@@ -96,6 +96,7 @@ fc, final_ds = process_all_variables(
     init_date=init_date,
     var_lst=var_lst,
     domain=domain,
+    ensemble_mean=False,
     model=model,
     source=source,
     server=server,
