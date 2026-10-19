@@ -1,0 +1,1 @@
+Scripts for reading and preprocessing data. Many of these are to just get GEFS archive, GEFS realtime, and GEFSv12 reforecast data all in the same format for the comparison to the M-Climate files.

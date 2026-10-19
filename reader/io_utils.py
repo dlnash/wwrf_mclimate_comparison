@@ -59,11 +59,13 @@ def load_processed_datasets(
     )
 
     fc = xr.open_dataset(
-        paths["forecast"]
+        paths["forecast"],
+        decode_timedelta=False,
     )
 
     ds = xr.open_dataset(
-        paths["diagnostics"]
+        paths["diagnostics"],
+        decode_timedelta=False,
     )
 
     return fc, ds

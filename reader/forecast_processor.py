@@ -5,14 +5,17 @@ Description: multi-variable pipeline to process all variables for forecast and c
 """
 
 import xarray as xr
-from data_loader_and_harmonizer import prepare_forecast_and_mclimate
-from compare_mclimate import compare_mclimate_to_forecast
+from reader.data_loader_and_harmonizer import prepare_forecast_and_mclimate
+
+from ar_hazard.compare_mclimate import compare_mclimate_to_forecast
+from ar_hazard.direction_diagnostics import compute_direction_diagnostics
 
 def process_variable(
     init_date,
     varname,
     domain,
-    source="wwrf",
+    model="gefs",
+    source="reforecast",
 ):
     """
     Load, harmonize, and compare one variable.
@@ -22,6 +25,7 @@ def process_variable(
         init_date=init_date,
         varname=varname,
         domain=domain,
+        model=model,
         source=source,
     )
 
@@ -37,8 +41,10 @@ def process_all_variables(
     init_date,
     var_lst,
     domain,
-    source="wwrf",
-    server="merced",
+    model="gefs",
+    source="reforecast",
+    server="aware",
+    derived_diagnostics=True,
 ):
     """
     Process all variables and merge outputs.
@@ -58,6 +64,7 @@ def process_all_variables(
             init_date=init_date,
             varname=varname,
             domain=domain,
+            model=model,
             source=source,
         )
 
@@ -74,5 +81,16 @@ def process_all_variables(
         compat="override",
     )
 
+    # -----------------------------------------
+    # Derived diagnostics
+    # -----------------------------------------
+    if derived_diagnostics == True:
+        
+        fc, final_ds = compute_direction_diagnostics(
+            fc,
+            final_ds,
+            init_date,
+            server=server
+        )
 
     return fc, final_ds

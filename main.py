@@ -9,8 +9,16 @@ import argparse
 import yaml
 import pandas as pd
 
-from forecast_processor import process_all_variables
-from io_utils import save_processed_datasets
+import sys
+from pathlib import Path
+
+# Path to the parent repos directory
+repos_dir = Path(__file__).resolve().parent.parent
+
+sys.path.insert(0, str(repos_dir))
+
+from reader.forecast_processor import process_all_variables
+from reader.io_utils import save_processed_datasets
 
 # ---------------------------------------------------------
 # Parse arguments
@@ -31,12 +39,19 @@ parser.add_argument(
 
 parser.add_argument(
     "--source",
+    default="archive",
+    help="reforecast, archive, realtime",
+)
+
+parser.add_argument(
+    "--model",
     default="wwrf",
+    help="gefs, wwrf",
 )
 
 parser.add_argument(
     "--server",
-    default="merced",
+    default="local",
 )
 
 args = parser.parse_args()
@@ -44,6 +59,7 @@ args = parser.parse_args()
 init_date = args.init_date
 domain_name = args.domain
 source = args.source
+model = args.model
 server = args.server
 
 
@@ -76,13 +92,14 @@ domain = {
 # ---------------------------------------------------------
 # Process variables
 # ---------------------------------------------------------
-
 fc, final_ds = process_all_variables(
     init_date=init_date,
     var_lst=var_lst,
     domain=domain,
+    model=model,
     source=source,
     server=server,
+    derived_diagnostics=False,
 )
 
 

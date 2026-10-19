@@ -1,45 +1,55 @@
 domains:
-  SEAK:
-    extent: [-141.0, -130.0, 54.0, 60.0]
-    ticks:
-      lon: [-140, -135, -130]
-      lat: [54.0, 56.0, 58.0, 60.0]
-    highlight_box: null
+    SEAK:
+        extent: [-141.0, -130.0, 54.0, 60.0]
+        ticks:
+            lon: [-140, -135, -130]
+            lat: [54.0, 56.0, 58.0, 60.0]
+        highlight_box: null
 
-  NPAC:
-    extent: [-170.0, -120.0, 40.0, 65.0]
-    ticks:
-      lon: [-160, -150, -140, -130]
-      lat: [45.0, 50.0, 55.0, 60.0]
-    highlight_box:
-      extent: [-141.0, -130.0, 54.0, 60.0]
-      linewidth: 0.75
-      color: "k"
+    NPAC:
+        extent: [-170.0, -120.0, 40.0, 65.0]
+        ticks:
+            lon: [-160, -150, -140, -130]
+            lat: [45.0, 50.0, 55.0, 60.0]
+        highlight_box:
+            extent: [-141.0, -130.0, 54.0, 60.0]
+            linewidth: 0.75
+            color: "k"
 
-  US-West:
-    extent: [-140.0, -110.0, 20.0, 50.0]
-    ticks:
-      lon: [-140, -135, -130, -125, -120, -115, -110]
-      lat: [20, 25, 30, 35, 40, 45, 50]
-    highlight_box: null
+    US-West:
+        extent: [-140.0, -110.0, 20.0, 50.0]
+        ticks:
+            lon: [-140, -135, -130, -125, -120, -115, -110]
+            lat: [20, 25, 30, 35, 40, 45, 50]
+        highlight_box: null
 
-  CA:
-    extent: [-125.0, -114.0, 31.0, 43.]
-    ticks:
-      lon: [-124, -122, -120, -118, -116, -114]
-      lat: [32, 34, 36, 38, 40, 42]
-    highlight_box: null
+    San-Mateo:
+        extent: [-126, -119., 35.5, 39]
+        ticks:
+            lon: [-125, -124, -123, -122, -121, -120]
+            lat: [36, 27, 38,]
+        highlight_box:
+            extent: [-122.75, -122., 37.05, 37.75]
+            linewidth: 0.75
+            color: "k"
 
-  Central_CA:
-    extent: [-123.0, -120.0, 35.0, 38.]
-    ticks:
-      lon: [-123, -122, -121, -120]
-      lat: [36, 37, 38]
-    highlight_box: null
+    CA:
+        extent: [-125.0, -114.0, 31.0, 43.]
+        ticks:
+            lon: [-124, -122, -120, -118, -116, -114]
+            lat: [32, 34, 36, 38, 40, 42]
+        highlight_box: null
 
-  DEFAULT:
-    extent: null   # will fall back to data-driven slicing
-    ticks:
-      lon: null
-      lat: null
-    highlight_box: null
+    Central_CA:
+        extent: [-123.0, -120.0, 35.0, 38.]
+        ticks:
+            lon: [-123, -122, -121, -120]
+            lat: [36, 37, 38]
+        highlight_box: null
+
+    DEFAULT:
+        extent: null   # will fall back to data-driven slicing
+        ticks:
+            lon: null
+            lat: null
+        highlight_box: null
