@@ -34,7 +34,7 @@ parser.add_argument(
 
 parser.add_argument(
     "--domain",
-    default="CA",
+    default="DEFAULT",
 )
 
 parser.add_argument(
