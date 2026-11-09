@@ -1,23 +1,33 @@
 import os
-import yaml
+import argparse
 import geopandas as gpd
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
 import cartopy.crs as ccrs
 from pathlib import Path
-from pyproj import CRS, Transformer
+# from pyproj import CRS, Transformer
 
 import globalvars
 from reader.io_utils import load_processed_datasets
 from modules.wrf_rio import wrf_prepare_for_rio
 
+# ---------------------------------------------------------
+# Parse arguments
+# ---------------------------------------------------------
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument(
+    "--init-date",
+    required=True,
+    help="Initialization date YYYYMMDDHH",
+)
+
+args = parser.parse_args()
+init_date = args.init_date
+
 # ==========================================================
 # User settings
 # ==========================================================
-
-init_date = "2021012700"
-lead_time=6
 
 varname = 'qpf'
 domain_name = 'Central_CA'
@@ -87,4 +97,4 @@ for _, poly in polys.iterrows():
     print("Maximum shape:", qpf_max.shape)
     print("Mean shape:", qpf_mean.shape)
     
-    qpf_mean.to_netcdf('test_ensemble_clip_burnscar.nc')
+    qpf_mean.to_netcdf(f'output/processed/burnscar_clips/ensemble_clip_{init_date}.nc')
