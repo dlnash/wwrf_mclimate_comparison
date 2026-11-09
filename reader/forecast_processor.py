@@ -30,7 +30,7 @@ def process_variable(
         model=model,
         source=source,
     )
-
+    print(f"Running comparison between M-Climate and Forecast for {varname}")
     comparison = compare_mclimate_to_forecast(
         forecast,
         mclimate,

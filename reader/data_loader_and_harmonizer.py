@@ -350,6 +350,7 @@ def prepare_forecast_and_mclimate(
             varname,
         )
 
+    print("Harmonizing M-Climate and Forecast Datasets...")
     forecast, mclimate = harmonize_datasets(
         forecast=forecast,
         mclimate=mclimate,

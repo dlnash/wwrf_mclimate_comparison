@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 from scipy.spatial import cKDTree
 
-# from utils import globalvars
+from utils import globalvars
 
-path_to_data = "/home/dnash/comet_data/"
+path_to_data = "/cw3e/mead/projects/cwp226/data/"
 
 def get_season_day(timestamp):
     """
@@ -120,9 +120,14 @@ def get_domain_indices(lat, lon, domain):
 
 def load_wwrf_archive_forecast(init_date, varname):
     """
-    Loads preprocessed NRT WWRF forecast (works for WY2020-21)
+    Loads preprocessed NRT WWRF forecast using lazy Dask arrays.
+    Computes 3-hour accumulated precipitation from hourly accumulated QPF.
     """
+
+    print("Loading NRT WWRF Archive Forecast...")
+
     init_date = pd.to_datetime(init_date, format="%Y%m%d%H")
+
     filename = os.path.join(
         path_to_data,
         "preprocessed/NRT_WWRF",
@@ -131,46 +136,51 @@ def load_wwrf_archive_forecast(init_date, varname):
 
     print(filename)
 
-    ds = xr.open_dataset(filename)
+    # Open lazily using Dask
+    ds = xr.open_dataset(
+        filename,
+        chunks="auto",
+        decode_timedelta=True,
+    )
 
-    lat2d = ds["XLAT"].isel(ensemble=0, time=0)
-    lon2d = ds["XLONG"].isel(ensemble=0, time=0)
-    
-    # Add geographic coordinates
-    ds = ds.assign_coords(
+    # Extract geographic coordinates (small 2D arrays)
+    lat2d = ds["XLAT"].isel(ensemble=0, time=0).compute()
+    lon2d = ds["XLONG"].isel(ensemble=0, time=0).compute()
+
+    # Work exclusively with precipitation
+    rain = ds["RAIN"]
+
+    # Calculate hourly precipitation from accumulated precipitation
+    qpf = rain.diff("time")
+
+    # Aggregate hourly precipitation into 3-hour totals
+    qpf_3h = qpf.resample(time="3h").sum()
+
+    # Calculate lead time
+    lead_hours = (
+        (qpf_3h.time - np.datetime64(init_date))
+        / np.timedelta64(1, "h")
+    ).astype("int32")
+
+    # Build a new, smaller dataset
+    out = qpf_3h.to_dataset(name="qpf")
+
+    out = out.assign_coords(
         lat=(("south_north", "west_east"), lat2d.data),
         lon=(("south_north", "west_east"), lon2d.data),
+        lead_time=("time", lead_hours.data),
+        init_date=np.datetime64(init_date),
     )
 
-    # ---------------------------------------------------------
-    # Compute precipitation rate (mm 1-h) from accumulated QPF
-    # ---------------------------------------------------------
-    qpf = ds["RAIN"].diff("time")
-    ds = ds.isel(time=slice(1, None))
-    ds["RAIN"] = qpf
-
-    
-    # resample from hourly to 3-h to match mclimate
-    ds = ds.resample(time='3h').sum()
-    
-    # Compute lead time from timestamps
-    lead_hours = (
-        (ds.time - np.datetime64(init_date))
-        / np.timedelta64(1, "h")
-    ).astype(int)
-    
-    # Rename time -> valid_time and make lead_time the dimension
-    ds = (
-        ds.rename({"time": "valid_time",
-                  "RAIN": "qpf"})
-          .assign_coords(lead_time=("valid_time", lead_hours.data))
-          .swap_dims({"valid_time": "lead_time"})
+    # Rename time dimension and use lead time as dimension
+    out = (
+        out.rename({"time": "valid_time"})
+           .swap_dims({"valid_time": "lead_time"})
     )
-    
-    # Store initialization time
-    ds = ds.assign_coords(init_date=init_date)
 
-    return ds
+    out = out.compute()
+
+    return out
 
 
 def load_wwrf_nrt_forecast(init_date, varname="QPF"):
@@ -279,7 +289,7 @@ def load_wwrf_mclimate(init_date, varname, base_dir=None):
     -------
     xarray.Dataset
     """
-
+    print("Loading WWRF M-Climate...")
     if base_dir is None:
         base_dir = path_to_data
 

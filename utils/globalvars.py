@@ -23,6 +23,18 @@ SERVER_CONFIGS = {
             "/data/projects/derived_products/GEFS_IVT/data"
         ),
     },
+
+
+    "aware": {
+        "path_to_data": "/cw3e/mead/projects/cwp226/data/",
+        "path_to_repo": "/cw3e/mead/projects/cwp226/wwrf_mclimate_comparison/",
+        "GEFS_REALTIME_DIR": (
+            "/data/projects/external_datasets/GEFS/processed"
+        ),
+        "GEFS_REALTIME_IVT_DIR": (
+            "/data/projects/derived_products/GEFS_IVT/data"
+        ),
+    },
 }
 
 
