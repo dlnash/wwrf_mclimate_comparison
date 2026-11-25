@@ -216,7 +216,37 @@ def harmonize_datasets(
     # -------------------------------------------------
     # 2. Spatial subset
     # -------------------------------------------------
+    print("Spatial subset...")
+    
+    # DEBUG -------------------------------------------
+    import numpy as np
 
+    lat = mclimate.latitude.values
+    lon = mclimate.longitude.values
+    
+    print("Domain bounds:")
+    print(domain)
+    
+    print("\nW-WRF coordinate ranges:")
+    print(f"Latitude:  {np.nanmin(lat):.2f} to {np.nanmax(lat):.2f}")
+    print(f"Longitude: {np.nanmin(lon):.2f} to {np.nanmax(lon):.2f}")
+    
+    print("\nCoordinate NaN counts:")
+    print(f"Latitude:  {np.isnan(lat).sum():,}")
+    print(f"Longitude: {np.isnan(lon).sum():,}")
+    
+    print("\nNumber of matching grid cells:")
+    
+    mask = (
+        (lat >= domain["lat_min"]) &
+        (lat <= domain["lat_max"]) &
+        (lon >= domain["lon_min"]) &
+        (lon <= domain["lon_max"])
+    )
+    
+    print(mask.sum())
+    # -------------------------------------------------
+    
     forecast = subset_domain(forecast, domain, model)
     mclimate = subset_domain(mclimate, domain, model)
 

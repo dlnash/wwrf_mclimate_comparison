@@ -113,15 +113,23 @@ def get_domain_indices(lat, lon, domain):
 
     iy, ix = np.where(mask)
 
+    if len(iy) == 0:
+        raise ValueError(
+            "No W-WRF grid cells found within requested domain.\n"
+            f"Domain bounds: {domain}\n"
+            f"Latitude range: {np.nanmin(lat):.2f} to {np.nanmax(lat):.2f}\n"
+            f"Longitude range: {np.nanmin(lon):.2f} to {np.nanmax(lon):.2f}"
+        )
+
     return (
         slice(iy.min(), iy.max() + 1),
         slice(ix.min(), ix.max() + 1),
     )
 
-def load_wwrf_archive_forecast(init_date, varname):
+def load_wwrf_archive_forecast(init_date, varname, resolution="1hr"):
     """
     Loads preprocessed NRT WWRF forecast using lazy Dask arrays.
-    Computes 3-hour accumulated precipitation from hourly accumulated QPF.
+    Can compute 3-hour accumulated precipitation from hourly accumulated QPF.
     """
 
     print("Loading NRT WWRF Archive Forecast...")
@@ -153,17 +161,14 @@ def load_wwrf_archive_forecast(init_date, varname):
     # Calculate hourly precipitation from accumulated precipitation
     qpf = rain.diff("time")
 
-    # Aggregate hourly precipitation into 3-hour totals
-    qpf_3h = qpf.resample(time="3h").sum()
-
     # Calculate lead time
     lead_hours = (
-        (qpf_3h.time - np.datetime64(init_date))
+        (qpf.time - np.datetime64(init_date))
         / np.timedelta64(1, "h")
     ).astype("int32")
 
     # Build a new, smaller dataset
-    out = qpf_3h.to_dataset(name="qpf")
+    out = qpf.to_dataset(name="qpf")
 
     out = out.assign_coords(
         lat=(("south_north", "west_east"), lat2d.data),
@@ -178,7 +183,13 @@ def load_wwrf_archive_forecast(init_date, varname):
            .swap_dims({"valid_time": "lead_time"})
     )
 
+    out = out.drop_vars(["XLAT", "XLONG"])
+
     out = out.compute()
+
+    if resolution == "3hr":
+        # Aggregate hourly precipitation into 3-hour totals
+        out = out.resample(time="3h").sum()
 
     return out
 
@@ -272,7 +283,7 @@ def load_wwrf_nrt_forecast(init_date, varname="QPF"):
 
     return ds
 
-def load_wwrf_mclimate(init_date, varname, base_dir=None):
+def load_wwrf_mclimate(init_date, varname, resolution="1hr", base_dir=None):
     """
     Load model climatology dataset based on init_date.
 
@@ -300,13 +311,57 @@ def load_wwrf_mclimate(init_date, varname, base_dir=None):
     # Build filename
     filename = os.path.join(
         base_dir,
-        f"preprocessed/wwrf_mclimate/{varname}_by_season_day",
+        f"preprocessed/wwrf_mclimate/{resolution}/{varname}_by_season_day",
         f"mclimate_qpf_season_day_{sd:03d}.nc"
     )
 
     print(f"Loading Season Day={sd}")
     print(filename)
 
-    ds = xr.open_dataset(filename)
+    ds = xr.open_dataset(filename, decode_timedelta=True)
+    print(ds)
+
+    ### FIX FOR MISSING LAT LON DATA
+    
+    # --------------------------------------------------
+    # Load coordinates from corrected WRF file
+    # --------------------------------------------------
+    wrf_file = os.path.join(
+        base_dir,
+        f"preprocessed/wwrf_reforecast/wwrf_qpf_1985120100.nc",
+    )
+    
+    with xr.open_dataset(wrf_file) as wrf_ds:
+    
+        latitude = wrf_ds["latitude"].load()
+        longitude = wrf_ds["longitude"].load()
+
+    if (
+        ds.sizes["south_north"] != latitude.sizes["south_north"]
+        or ds.sizes["west_east"] != latitude.sizes["west_east"]
+    ):
+        raise ValueError("Spatial dimensions do not match!")
+
+    ds = ds.drop_vars(
+        ["lat", "lon"],
+        errors="ignore"
+    )
+
+    ds = ds.assign_coords(
+        latitude=latitude,
+        longitude=longitude
+    )
+
+    ds["latitude"].attrs = {
+        "long_name": "Latitude",
+        "units": "degrees_north"
+    }
+
+    ds["longitude"].attrs = {
+        "long_name": "Longitude",
+        "units": "degrees_east"
+    }
+
+    print(ds)
 
     return ds
